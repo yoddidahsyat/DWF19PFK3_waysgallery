@@ -1,12 +1,26 @@
 const { User } = require('../../models/');
 
+const statusSuccess = "SUCCESS";
+const statusFailed = "FAILED";
+const messageSuccessSingle = (id, type) => { return `User with id: ${id} succesfully ${type} ` }
+const messageFailedSingle = (id) => { return `User with id: ${id} does not exist` };
+const errorResponse = (err, res) => {
+    console.log(err);
+    res.status(500).send({ error: { message: "Server Error" } })
+}
+
 exports.getUsers = async (req, res) => {
     try {
-        const users = await User.findAll();
+        const users = await User.findAll({
+            attributes: {
+                exclude: ["createdAt", "updatedAt", "deletedAt", "password"],
+            }
+        });
 
         if(users.length === 0) {
             return res.status(400).send({
-                status: "USERS DATA EMPTY",
+                status: statusSuccess,
+                message: "Data empty",
                 data: {
                     users: []
                 }
@@ -14,18 +28,13 @@ exports.getUsers = async (req, res) => {
         }
 
         res.send({
-            status: "GET USERS SUCCESS",
+            status: statusSuccess,
             data: {
                 users
             }
         })
     } catch (err) {
-        console.log(err)
-        return res.status(500).send({
-            error: {
-                message: "Server Error"
-            }
-        })
+        errorResponse(err,res);
     }
 }
 
@@ -35,12 +44,16 @@ exports.getUser = async (req, res) => {
         const user = await User.findOne({
             where: {
                 id
+            },
+            attributes: {
+                exclude: ["createdAt", "updatedAt", "deletedAt", "password"],
             }
         });
 
         if(!user) {
             return res.status(400).send({
-                status: `USER WITH ID:${id} DOES NOT EXIST`,
+                status: statusFailed,
+                message: messageFailedSingle(id),
                 data: {
                     user: []
                 }
@@ -48,20 +61,64 @@ exports.getUser = async (req, res) => {
         }
 
         res.send({
-            status: "GET USER SUCCESS",
+            status: statusSuccess,
             data: {
                 user
             }
         })
     } catch (err) {
-        console.log(err)
-        return res.status(500).send({
-            error: {
-                message: "Server Error"
-            }
-        })
+        errorResponse(err,res);
     }
 }
+
+exports.updateUser = async (req, res) => {
+    try {
+        const {id} = req.params;
+        const { body: userData } = req;
+
+        const isUserExist = await User.findOne({
+            where: {
+                id
+            }
+        });
+        if (!isUserExist) {
+            return res.status(400).send({
+                status: statusFailed,
+                message: messageFailedSingle(id),
+                data: {
+                    user: []
+                }
+            })
+        }
+
+        await User.update(userData, {
+            where: {
+                id
+            }
+        });
+
+        const newUser = await User.findOne({
+            where: {
+                id
+            },
+            attributes: {
+                exclude: ["createdAt", "updatedAt", "deletedAt", "password"],
+            }
+        });
+
+        res.send({
+            status: statusSuccess,
+            message: messageSuccessSingle(id, "updated"),
+            data: {
+                user: newUser
+            }
+        })
+    } catch (err) {
+        return errorResponse(err, res);
+    }
+}
+
+
 // softdelete
 exports.deleteUser = async (req, res) => {
     try {
@@ -74,7 +131,8 @@ exports.deleteUser = async (req, res) => {
         });
         if (!isUserExist) {
             return res.status(400).send({
-                status: `USER WITH ID:${id} DOES NOT EXIST`,
+                status: statusFailed,
+                message: messageFailedSingle(id),
                 data: {
                     user: []
                 }
@@ -87,7 +145,8 @@ exports.deleteUser = async (req, res) => {
             }
         });
         res.send({
-            status: `DELETE USER WITH ID:${id} SUCCESS`,
+            status: statusSuccess,
+            message: messageSuccessSingle(id, "deleted"),
             data: {
                 user: null
             }
@@ -115,7 +174,8 @@ exports.restoreUser = async (req, res) => {
         })
 
         res.send({
-            status: `RESTORE USER WITH ID:${id} SUCCESS`,
+            status: statusSuccess,
+            message: messageSuccessSingle(id, "restored"),
             data: {
                 user
             }

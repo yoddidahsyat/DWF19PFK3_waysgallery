@@ -11,7 +11,9 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Project.hasMany(models.ProjectPhoto);
+      Project.hasMany(models.ProjectPhoto, {
+        as: "photos"
+      });
       Project.belongsTo(models.Transaction);
     }
   };

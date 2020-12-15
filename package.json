@@ -4,7 +4,7 @@
   "description": "final task dumbways",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -21,8 +21,13 @@
     "sequelize-cli": "^6.2.0"
   },
   "dependencies": {
+    "bcrypt": "^5.0.0",
     "express": "^4.17.1",
     "express-group-routes": "^1.1.0",
+    "express-jwt": "^6.0.0",
+    "joi": "^17.3.0",
+    "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.2",
     "mysql2": "^2.2.5",
     "sequelize": "^6.3.5"
   }
